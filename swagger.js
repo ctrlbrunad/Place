@@ -6,7 +6,7 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Rankify API",
+      title: "Place API",
       version: "1.0.0",
       description: "API para gerenciar listas, reviews e estabelecimentos",
     },

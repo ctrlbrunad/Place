@@ -5,7 +5,10 @@ export async function listarEstabelecimentos(req, res) {
     const estabelecimentos = await getEstabelecimentos();
     res.json(estabelecimentos);
   } catch (error) {
-    res.status(500).json({ erro: error.message });
+    res.status(500).json({ 
+    message: "Erro ao buscar estabelecimentos.", 
+    error: error.message 
+});
   }
 }
 

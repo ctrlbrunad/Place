@@ -14,6 +14,7 @@ build/
 .env.development
 .env.test
 .env.production
+.env DATABASE_URL
 
 # Firebase service account keys
 **/Keys/serviceAccountKey.json
@@ -35,3 +36,6 @@ Thumbs.db
 
 # ENV
 .env
+
+#Database
+DATABASE_URL='postgresql://neondb_owner:npg_gkUFNZVB43GK@ep-super-cherry-acmnzvw8-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'

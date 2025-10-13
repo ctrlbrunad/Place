@@ -1,40 +1,21 @@
 /**
  * @swagger
- * /listas:
+ * /reviews:
  *   get:
- *     summary: Retorna todas as listas
- *     responses:
- *       200:
- *         description: Lista de listas.
- *   post:
- *     summary: Cria uma nova lista
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nome:
- *                 type: string
- *               usuarioId:
- *                 type: string
- *               estabelecimentos:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       201:
- *         description: Lista criada com sucesso
+ *     summary: Retorna todas as reviews de um estabelecimento
  */
 
 import { Router } from "express";
 import { criarReviewController, listarReviewsController } from "../Controllers/reviewsController.js";
+import { authMiddleware } from "../Middlewares/authMiddleware.js";
 
+// CORREÇÃO: A criação do router deve vir ANTES do seu uso.
 const router = Router();
 
-// rotaa de reviews
+// rotas de reviews
 router.get("/:estabelecimentoId", listarReviewsController); // lista todas as reviews de um estabelecimento
-router.post("/", criarReviewController); // cria uma nova review
+
+// CORREÇÃO DE SEGURANÇA: Adicionando o authMiddleware para proteger a rota de criação.
+router.post("/", authMiddleware, criarReviewController); // cria uma nova review
 
 export default router;

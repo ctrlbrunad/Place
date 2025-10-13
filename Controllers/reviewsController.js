@@ -36,7 +36,9 @@ import { criarReview, listarReviews } from "../Services/reviewsService.js";
 
 export const criarReviewController = async (req, res) => {
   try {
-    const { usuarioId, estabelecimentoId, nota, comentario } = req.body;
+    // pegando o ID do usuário autenticado pelo Firebase
+    const usuarioId = req.user.uid; 
+    const { estabelecimentoId, nota, comentario } = req.body;
 
 // isso chama o service para criar a review (professor juro que sou eu que to comentando nao o chatgpt)
     const reviewId = await criarReview(usuarioId, estabelecimentoId, nota, comentario);

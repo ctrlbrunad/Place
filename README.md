@@ -1,5 +1,2 @@
-Um app **mobile-first** focado em **estabelecimentos de gastronomia** (hamburguerias, pizzarias, cafés, etc.), permitindo que usuários:
-
-1. Descubram lugares organizados por **categorias e subcategorias**.
-2. Criem **listas pessoais de lugares favoritos** (como playlists do Spotify).
-3. Visualizem **rankings Top 10** por subcategoria (ex: “Top 10 hamburguerias da cidade”).
+O **PLACE** é um aplicativo que exibe e classifica estabelecimentos gastronômicos (restaurantes, cafés, bares etc.).
+O diferencial é permitir que os usuários criem playlists (listas personalizadas) de lugares — como “lugares que quero visitar”, “meus favoritos” ou “melhores pizzarias” — e possam salvar, compartilhar ou apenas manter essas listas no perfil.

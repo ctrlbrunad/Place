@@ -24,14 +24,14 @@ setupSwagger(app); // <-- adiciona isso
 // rotas
 import authRoutes from "./Routes/authRoutes.js";
 // essas são as rotas utilizadas atualmente
-app.use("/auth", authRoutes); // 👈 NOVA ROTA
+app.use("/auth", authRoutes); // <- NOVA ROTA
 app.use("/estabelecimentos", estabelecimentosRoutes);
 app.use("/listas", listasRoutes);
 app.use("/reviews", reviewsRoutes);
 
 
 app.get("/", (req, res) => {
-  res.send("API do Rankify funcionando!");
+  res.send("API do Place funcionando!");
 });
 
 app.listen(PORT, () => {

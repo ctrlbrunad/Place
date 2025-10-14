@@ -1,58 +1,104 @@
 import { pool } from "../db.js";
 
-// Criar uma nova lista (COM TRANSAÇÃO)
-export async function criarLista(nome, usuarioId, estabelecimentos) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN'); // Inicia a transação
+export const listasService = {
+    async criarLista({ nome, usuarioId, estabelecimentos, publica }) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
 
-    const queryLista = `
-      INSERT INTO listas (nome, usuario_id, publica)
-      VALUES ($1, $2, true) RETURNING id
-    `;
-    const res = await client.query(queryLista, [nome, usuarioId]);
-    const listaId = res.rows[0].id;
+            const queryLista = `
+              INSERT INTO listas (nome, usuario_id, publica)
+              VALUES ($1, $2, $3) RETURNING id
+            `;
+            const res = await client.query(queryLista, [nome, usuarioId, publica]);
+            const listaId = res.rows[0].id;
 
-    // Prepara uma única query para inserir todos os estabelecimentos
-    const queryEstab = `
-      INSERT INTO lista_estabelecimentos (lista_id, estabelecimento_id)
-      SELECT $1, unnest($2::text[])
-    `;
-    await client.query(queryEstab, [listaId, estabelecimentos]);
+            if (estabelecimentos && estabelecimentos.length > 0) {
+                const queryEstab = `
+                  INSERT INTO lista_estabelecimentos (lista_id, estabelecimento_id)
+                  SELECT $1, unnest($2::text[])
+                `;
+                await client.query(queryEstab, [listaId, estabelecimentos]);
+            }
 
-    await client.query('COMMIT'); // Confirma a transação
-    return listaId;
+            await client.query('COMMIT');
+            return { id: listaId, nome, usuario_id: usuarioId, publica, estabelecimentos };
 
-  } catch (error) {
-    await client.query('ROLLBACK'); // Desfaz tudo em caso de erro
-    console.error("Erro na transação de criar lista:", error);
-    throw new Error("Não foi possível criar a lista.");
-  } finally {
-    client.release(); // Libera o cliente de volta para o pool
-  }
-}
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error("Erro na transação de criar lista:", error);
+            throw new Error("Não foi possível criar a lista.");
+        } finally {
+            client.release();
+        }
+    },
 
-// Listar listas (COM QUERY OTIMIZADA)
-export async function listarListas(usuarioId) {
-  // Esta única query busca as listas e já agrega os estabelecimentos em um JSON
-  const query = `
-    SELECT
-      l.id,
-      l.nome,
-      l.usuario_id,
-      u.name AS usuario_nome,
-      COALESCE(
-        (SELECT json_agg(json_build_object('id', e.id, 'nome', e.nome))
-         FROM lista_estabelecimentos le
-         JOIN estabelecimentos e ON le.estabelecimento_id = e.id
-         WHERE le.lista_id = l.id),
-        '[]'::json
-      ) AS estabelecimentos
-    FROM listas l
-    JOIN users u ON l.usuario_id = u.id
-    WHERE l.usuario_id = $1 OR l.publica = true
-    ORDER BY l.id DESC
-  `;
-  const res = await pool.query(query, [usuarioId]);
-  return res.rows;
-}
+    async listarListas(usuarioId) {
+        const query = `
+            SELECT l.id, l.nome, l.publica, array_agg(le.estabelecimento_id) as estabelecimentos
+            FROM listas l
+            LEFT JOIN lista_estabelecimentos le ON l.id = le.lista_id
+            WHERE l.usuario_id = $1 OR l.publica = true
+            GROUP BY l.id
+            ORDER BY l.nome;
+        `;
+        const res = await pool.query(query, [usuarioId]);
+        return res.rows;
+    },
+
+    async adicionarEstabelecimento(listaId, estabelecimentoId, usuarioId) {
+        const listaRes = await pool.query('SELECT usuario_id FROM listas WHERE id = $1', [listaId]);
+        if (listaRes.rowCount === 0) {
+            throw new Error('Lista não encontrada.');
+        }
+        if (listaRes.rows[0].usuario_id !== usuarioId) {
+            throw new Error('Usuário não autorizado a adicionar a esta lista.');
+        }
+
+        await pool.query('INSERT INTO lista_estabelecimentos (lista_id, estabelecimento_id) VALUES ($1, $2)', [listaId, estabelecimentoId]);
+    },
+
+    async removerEstabelecimento(listaId, estabelecimentoId, usuarioId) {
+        const listaRes = await pool.query('SELECT usuario_id FROM listas WHERE id = $1', [listaId]);
+        if (listaRes.rowCount === 0) {
+            throw new Error('Lista não encontrada.');
+        }
+        if (listaRes.rows[0].usuario_id !== usuarioId) {
+            throw new Error('Usuário não autorizado a remover desta lista.');
+        }
+
+        const result = await pool.query('DELETE FROM lista_estabelecimentos WHERE lista_id = $1 AND estabelecimento_id = $2', [listaId, estabelecimentoId]);
+
+        if (result.rowCount === 0) {
+            throw new Error('Estabelecimento não encontrado na lista.');
+        }
+    },
+
+    async deletarLista(listaId, usuarioId) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const listaRes = await client.query('SELECT usuario_id FROM listas WHERE id = $1', [listaId]);
+
+            if (listaRes.rowCount === 0) {
+                throw new Error('Lista não encontrada.');
+            }
+
+            if (listaRes.rows[0].usuario_id !== usuarioId) {
+                throw new Error('Usuário não autorizado a deletar esta lista.');
+            }
+
+            await client.query('DELETE FROM lista_estabelecimentos WHERE lista_id = $1', [listaId]);
+            await client.query('DELETE FROM listas WHERE id = $1', [listaId]);
+
+            await client.query('COMMIT');
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error("Erro na transação de deletar lista:", error);
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+};

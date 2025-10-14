@@ -4,6 +4,7 @@ import { initializeFirebase } from "./Services/firebaseService.js";
 import estabelecimentosRoutes from "./Routes/estabelecimentosRoutes.js";
 import listasRoutes from "./Routes/listasRoutes.js";
 import reviewsRoutes from "./Routes/reviewsRoutes.js";
+import sugestoesRoutes from "./Routes/sugestoesRoutes.js";
 
 // IMPORTA O SWAGGER
 import { setupSwagger } from "./swagger.js";
@@ -28,6 +29,9 @@ app.use("/auth", authRoutes); // <- NOVA ROTA
 app.use("/estabelecimentos", estabelecimentosRoutes);
 app.use("/listas", listasRoutes);
 app.use("/reviews", reviewsRoutes);
+app.use("/sugestoes", sugestoesRoutes);
+import estabelecimentosAdminRoutes from "./Routes/estabelecimentosAdminRoutes.js";
+app.use("/admin/estabelecimentos", estabelecimentosAdminRoutes);
 
 
 app.get("/", (req, res) => {

@@ -1,19 +1,31 @@
-
 import pkg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 const { Pool } = pkg;
 
-const connectionString ='postgresql://neondb_owner:npg_gkUFNZVB43GK@ep-super-cherry-acmnzvw8-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+// A string de conexão agora é lida de um arquivo .env para segurança
+const connectionString = process.env.DATABASE_URL;
 
 export const pool = new Pool({
   connectionString,
+  // Adicionar configurações de SSL que são geralmente necessárias para o NeonDB
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
+// O pool gerencia as conexões automaticamente. 
+// O ideal é testar a conexão em uma rota de "health check", 
+// mas para simplicidade, vamos deixar o pool lidar com isso.
+// O .connect() inicial foi removido.
 
-pool.connect()
-  .then(() => console.log('Conectado ao NeonDB com sucesso!'))
-  .catch(err => console.error('Erro ao conectar no NeonDB:', err));
+pool.on('connect', () => {
+  console.log('Cliente conectado ao pool do NeonDB!');
+});
 
-  
-
-
-  
+pool.on('error', (err) => {
+  console.error('Erro inesperado no cliente do pool', err);
+  process.exit(-1);
+});

@@ -4,12 +4,12 @@ import {
     updateEstabelecimento,
     deleteEstabelecimento
 } from '../Controllers/estabelecimentosAdminController.js';
-import { adminAuthMiddleware } from '../Middlewares/adminAuthMiddleware.js';
+import { adminMiddleware } from '../Middlewares/adminMiddleware.js';
 
 const router = express.Router();
 
-router.post('/', adminAuthMiddleware, createEstabelecimento);
-router.put('/:id', adminAuthMiddleware, updateEstabelecimento);
-router.delete('/:id', adminAuthMiddleware, deleteEstabelecimento);
+router.post('/', adminMiddleware, createEstabelecimento);
+router.put('/:id', adminMiddleware, updateEstabelecimento);
+router.delete('/:id', adminMiddleware, deleteEstabelecimento);
 
 export default router;

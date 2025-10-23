@@ -1,24 +1,28 @@
+// /middlewares/adminMiddleware.js
 import { pool } from '../db.js';
 
 export const adminMiddleware = async (req, res, next) => {
     try {
-        const { uid } = req.user;
+        // Importante: Este middleware DEVE rodar DEPOIS do authMiddleware.
+        // Ele espera que req.user já exista.
+        const usuarioId = req.user.uid;
 
-        const userRes = await pool.query('SELECT is_admin FROM users WHERE id = $1', [uid]);
-
-        if (userRes.rowCount === 0) {
-            return res.status(403).json({ message: 'Usuário não encontrado.' });
+        if (!usuarioId) {
+            return res.status(401).json({ message: 'Autenticação necessária.' });
         }
 
-        const { is_admin } = userRes.rows[0];
+        // Verifica no banco se o usuário é admin
+        const result = await pool.query('SELECT is_admin FROM users WHERE id = $1', [usuarioId]);
 
-        if (!is_admin) {
+        if (result.rowCount === 0 || !result.rows[0].is_admin) {
             return res.status(403).json({ message: 'Acesso negado. Rota exclusiva para administradores.' });
         }
 
+        // Usuário é admin, pode continuar
         next();
+
     } catch (error) {
-        console.error("Erro no middleware de admin:", error);
-        res.status(500).json({ message: 'Erro interno do servidor.' });
+        console.error("Erro no adminAutMiddleware:", error);
+        res.status(500).json({ message: 'Erro ao verificar permissões de administrador.' });
     }
 };

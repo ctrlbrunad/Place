@@ -1,12 +1,14 @@
+// /Services/reviewsService.js (VERSÃO CORRIGIDA)
+
 import { pool } from '../db.js';
-import { getFirestore } from './firebaseService.js'; // Importar o Firestore
+// import { getFirestore } from './firebaseService.js'; // NÃO PRECISA MAIS DO FIRESTORE
 
 export async function criarReview(usuarioId, estabelecimentoId, nota, comentario) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN'); // Inicia uma transação
 
-    // 1. Insere a nova review no PostgreSQL
+    // 1. Insere a nova review no PostgreSQL (como já fazia)
     const query = `
       INSERT INTO reviews (usuario_id, estabelecimento_id, nota, comentario, data)
       VALUES ($1, $2, $3, $4, NOW())
@@ -15,7 +17,7 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
     const res = await client.query(query, [usuarioId, estabelecimentoId, nota, comentario]);
     const reviewId = res.rows[0].id;
 
-    // 2. Calcula a nova média e total de avaliações a partir do PostgreSQL
+    // 2. Calcula a nova média e total de avaliações a partir do PostgreSQL (como já fazia)
     const statsQuery = `
       SELECT 
         AVG(nota)::numeric(10,2) as media_notas, 
@@ -26,13 +28,19 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
     const statsRes = await client.query(statsQuery, [estabelecimentoId]);
     const { media_notas, total_avaliacoes } = statsRes.rows[0];
 
-    // 3. Atualiza o documento correto no Firestore
-    const db = getFirestore();
-    const estabelecimentoRef = db.collection('estabelecimentos').doc(estabelecimentoId);
-    await estabelecimentoRef.update({
-      rating: parseFloat(media_notas),
-      total_avaliacoes: parseInt(total_avaliacoes, 10)
-    });
+    // 3. ATUALIZADO: Atualiza a tabela 'estabelecimentos' no PostgreSQL
+    const updateQuery = `
+      UPDATE estabelecimentos
+      SET 
+        rating = $1,
+        total_avaliacoes = $2
+      WHERE id = $3
+    `;
+    await client.query(updateQuery, [
+      parseFloat(media_notas), 
+      parseInt(total_avaliacoes, 10), 
+      estabelecimentoId
+    ]);
 
     await client.query('COMMIT'); // Confirma a transação
     return reviewId;
@@ -46,7 +54,7 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
   }
 }
 
-// lista todas as reviews de um estabelecimento
+// lista todas as reviews de um estabelecimento (isto já estava correto)
 export async function listarReviews(estabelecimentoId) {
   const query = `
     SELECT r.id, r.usuario_id, u.name AS usuario_nome, r.nota, r.comentario, r.data

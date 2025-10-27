@@ -32,7 +32,7 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
     const updateQuery = `
       UPDATE estabelecimentos
       SET 
-        rating = $1,
+        media_notas = $1,
         total_avaliacoes = $2
       WHERE id = $3
     `;
@@ -57,7 +57,7 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
 // lista todas as reviews de um estabelecimento (isto já estava correto)
 export async function listarReviews(estabelecimentoId) {
   const query = `
-    SELECT r.id, r.usuario_id, u.name AS usuario_nome, r.nota, r.comentario, r.data
+    SELECT r.id, r.usuario_id, u.nome AS usuario_nome, r.nota, r.comentario, r.data
     FROM reviews r
     JOIN users u ON r.usuario_id = u.id
     WHERE r.estabelecimento_id = $1

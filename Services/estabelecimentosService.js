@@ -1,6 +1,6 @@
-// /Services/estabelecimentosService.js
+// /Services/estabelecimentosService.js (VERSÃO CORRIGIDA - BUSCA POR CATEGORIA)
 
-import { pool } from "../db.js"; // Importa o pool do Neon DB
+import { pool } from "../db.js"; 
 
 export const estabelecimentosService = {
   
@@ -14,25 +14,25 @@ export const estabelecimentosService = {
     }
   },
 
-  async getTop10(subcategoriaId) {
+  // A Rota ainda é /top10/... mas agora ela busca na coluna CATEGORIA
+  async getTop10(categoriaNome) { // O parâmetro agora é o nome da Categoria
     try {
+      // --- CORREÇÃO AQUI ---
       const query = `
         SELECT * FROM estabelecimentos 
-        WHERE subcategoria_id = $1 
-        ORDER BY rating DESC 
+        WHERE categoria = $1 -- CORREÇÃO: Procura na coluna 'categoria'
+        ORDER BY media_notas DESC -- Mantém a ordenação por nota
         LIMIT 10
       `;
-      const res = await pool.query(query, [subcategoriaId]);
+      // Passa o NOME da categoria (ex: 'Hamburgueria')
+      const res = await pool.query(query, [categoriaNome]); 
       return res.rows;
     } catch (error) {
-      console.error("Erro ao buscar Top 10:", error);
-      throw new Error("Erro ao buscar Top 10.");
+      console.error(`Erro ao buscar Top 10 para ${categoriaNome}:`, error);
+      throw new Error(`Erro ao buscar Top 10 para ${categoriaNome}.`);
     }
   },
 
-  /**
-   * NOVO - Função essencial para a tela de detalhes do estabelecimento.
-   */
   async getEstabelecimentoPorId(id) {
     try {
       const res = await pool.query("SELECT * FROM estabelecimentos WHERE id = $1", [id]);
@@ -44,7 +44,7 @@ export const estabelecimentosService = {
       return res.rows[0];
     } catch (error) {
       console.error("Erro ao buscar estabelecimento por ID:", error);
-      throw error; // Repassa o erro (pode ser o 'não encontrado')
+      throw error;
     }
   }
 };

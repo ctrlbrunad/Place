@@ -1,24 +1,46 @@
-// /Services/userService.js
-
 import { pool } from "../db.js";
 
 export const userService = {
     /**
-     * Busca os dados de perfil de um usuário pelo ID.
-     * Usado pela "Tela de Perfil".
+     * Busca os dados de perfil de um usuário pelo ID,
+     * incluindo as contagens de listas e reviews.
      */
     async getUserProfile(usuarioId) {
         try {
-            // Seleciona explicitamente os campos para NUNCA retornar o senhaHash
-            const result = await pool.query(
-                "SELECT id, nome, email, is_admin FROM users WHERE id = $1",
-                [usuarioId]
-            );
+            // --- ESTA É A MUDANÇA ---
+            // Usamos subconsultas (SELECT COUNT(*)) para pegar as contagens
+            // das tabelas 'reviews' e 'listas'
+            const query = `
+                SELECT 
+                    u.id, 
+                    u.nome, 
+                    u.email, 
+                    u.is_admin,
+                    (
+                        SELECT COUNT(*) 
+                        FROM reviews r 
+                        WHERE r.usuario_id = u.id
+                    ) AS "reviewsCount",
+                    (
+                        SELECT COUNT(*) 
+                        FROM listas l 
+                        WHERE l.usuario_id = u.id
+                    ) AS "listsCount"
+                FROM 
+                    users u
+                WHERE 
+                    u.id = $1;
+            `;
+            // -------------------------
+
+            const result = await pool.query(query, [usuarioId]);
 
             if (result.rowCount === 0) {
                 throw new Error("Usuário não encontrado.");
             }
 
+            // Agora, result.rows[0] terá:
+            // { id, nome, email, is_admin, reviewsCount, listsCount }
             return result.rows[0];
 
         } catch (error) {
@@ -29,6 +51,7 @@ export const userService = {
 
     /**
      * Atualiza os dados de perfil de um usuário (ex: nome).
+     * (Esta função permanece a mesma)
      */
     async updateUserProfile(usuarioId, { nome }) {
         try {
@@ -36,7 +59,7 @@ export const userService = {
                 `UPDATE users 
                  SET nome = $1 
                  WHERE id = $2
-                 RETURNING id, nome, email, is_admin`, // Retorna os dados atualizados
+                 RETURNING id, nome, email, is_admin`,
                 [nome, usuarioId]
             );
 

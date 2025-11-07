@@ -7,15 +7,13 @@ export const userService = {
      */
     async getUserProfile(usuarioId) {
         try {
-            // --- ESTA É A MUDANÇA ---
-            // Usamos subconsultas (SELECT COUNT(*)) para pegar as contagens
-            // das tabelas 'reviews' e 'listas'
+            // --- CORREÇÃO AQUI ---
+            // Removemos 'u.is_admin' da consulta, pois a coluna não existe.
             const query = `
                 SELECT 
                     u.id, 
                     u.nome, 
                     u.email, 
-                    u.is_admin,
                     (
                         SELECT COUNT(*) 
                         FROM reviews r 
@@ -38,9 +36,7 @@ export const userService = {
             if (result.rowCount === 0) {
                 throw new Error("Usuário não encontrado.");
             }
-
-            // Agora, result.rows[0] terá:
-            // { id, nome, email, is_admin, reviewsCount, listsCount }
+            
             return result.rows[0];
 
         } catch (error) {
@@ -51,15 +47,16 @@ export const userService = {
 
     /**
      * Atualiza os dados de perfil de um usuário (ex: nome).
-     * (Esta função permanece a mesma)
      */
     async updateUserProfile(usuarioId, { nome }) {
         try {
+            // --- CORREÇÃO AQUI TAMBÉM ---
+            // Removemos 'is_admin' do RETURNING
             const result = await pool.query(
                 `UPDATE users 
                  SET nome = $1 
                  WHERE id = $2
-                 RETURNING id, nome, email, is_admin`,
+                 RETURNING id, nome, email`, // Retorna os dados atualizados
                 [nome, usuarioId]
             );
 

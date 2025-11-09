@@ -6,7 +6,11 @@ export const estabelecimentosService = {
   
   async getEstabelecimentos() {
     try {
-      const res = await pool.query("SELECT * FROM estabelecimentos ORDER BY nome");
+      const query = `
+        SELECT * FROM estabelecimentos 
+        ORDER BY media_notas DESC, total_avaliacoes DESC
+      `;
+      const res = await pool.query(query);
       return res.rows;
     } catch (error) {
       console.error("Erro ao buscar estabelecimentos:", error);

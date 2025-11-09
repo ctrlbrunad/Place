@@ -1,14 +1,14 @@
-// /Services/reviewsService.js (VERSÃO CORRIGIDA)
+// /Services/reviewsService.js (VERSÃO ATUALIZADA)
 
 import { pool } from '../db.js';
-// import { getFirestore } from './firebaseService.js'; // NÃO PRECISA MAIS DO FIRESTORE
+// (O resto dos seus imports, se houver)
 
+// --- SUA FUNÇÃO EXISTENTE ---
 export async function criarReview(usuarioId, estabelecimentoId, nota, comentario) {
+  // ... (seu código existente para criar review)
   const client = await pool.connect();
   try {
-    await client.query('BEGIN'); // Inicia uma transação
-
-    // 1. Insere a nova review no PostgreSQL (como já fazia)
+    await client.query('BEGIN'); 
     const query = `
       INSERT INTO reviews (usuario_id, estabelecimento_id, nota, comentario, data)
       VALUES ($1, $2, $3, $4, NOW())
@@ -16,8 +16,6 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
     `;
     const res = await client.query(query, [usuarioId, estabelecimentoId, nota, comentario]);
     const reviewId = res.rows[0].id;
-
-    // 2. Calcula a nova média e total de avaliações a partir do PostgreSQL (como já fazia)
     const statsQuery = `
       SELECT 
         AVG(nota)::numeric(10,2) as media_notas, 
@@ -27,8 +25,6 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
     `;
     const statsRes = await client.query(statsQuery, [estabelecimentoId]);
     const { media_notas, total_avaliacoes } = statsRes.rows[0];
-
-    // 3. ATUALIZADO: Atualiza a tabela 'estabelecimentos' no PostgreSQL
     const updateQuery = `
       UPDATE estabelecimentos
       SET 
@@ -41,21 +37,20 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
       parseInt(total_avaliacoes, 10), 
       estabelecimentoId
     ]);
-
-    await client.query('COMMIT'); // Confirma a transação
+    await client.query('COMMIT'); 
     return reviewId;
-
   } catch (error) {
-    await client.query('ROLLBACK'); // Desfaz a transação em caso de erro
+    await client.query('ROLLBACK'); 
     console.error("Erro na transação de criar review:", error);
     throw new Error("Não foi possível registrar a avaliação.");
   } finally {
-    client.release(); // Libera o cliente de volta para o pool
+    client.release(); 
   }
 }
 
-// lista todas as reviews de um estabelecimento (isto já estava correto)
+// --- SUA FUNÇÃO EXISTENTE ---
 export async function listarReviews(estabelecimentoId) {
+  // ... (seu código existente para listar reviews)
   const query = `
     SELECT r.id, r.usuario_id, u.nome AS usuario_nome, r.nota, r.comentario, r.data
     FROM reviews r
@@ -65,4 +60,33 @@ export async function listarReviews(estabelecimentoId) {
   `;
   const res = await pool.query(query, [estabelecimentoId]);
   return res.rows;
+}
+
+// --- ⬇️ ADICIONE ESTA NOVA FUNÇÃO NO FINAL ---
+/**
+ * Busca todas as reviews de um usuário específico (para "Minhas Avaliações").
+ * Junta com a tabela 'estabelecimentos' para pegar o nome.
+ */
+export async function listarReviewsDoUsuario(usuarioId) {
+  try {
+    const query = `
+      SELECT 
+        r.id, 
+        r.nota, 
+        r.comentario, 
+        r.data,
+        e.nome AS estabelecimento_nome,
+        e.id AS estabelecimento_id
+      FROM reviews r
+      JOIN estabelecimentos e ON r.estabelecimento_id = e.id
+      WHERE r.usuario_id = $1
+      ORDER BY r.data DESC;
+    `;
+    const res = await pool.query(query, [usuarioId]);
+    return res.rows;
+
+  } catch (error) {
+    console.error("Erro ao buscar reviews do usuário:", error);
+    throw new Error("Não foi possível buscar as avaliações.");
+  }
 }

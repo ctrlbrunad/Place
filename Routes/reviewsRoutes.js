@@ -1,21 +1,25 @@
-// /Routes/reviewsRoutes.js (CORRIGIDO)
+// /Routes/reviewsRoutes.js (VERSÃO ATUALIZADA)
 
-/**
- * @swagger
- * /reviews:
- * get:
- * summary: Retorna todas as reviews de um estabelecimento
- */
 import { authMiddleware } from "../Middlewares/authMiddleware.js";
 import { Router } from "express";
-import { criarReviewController, listarReviewsController } from "../Controllers/reviewsController.js";
+
+// 1. ADICIONE 'listarMinhasReviewsController' AO IMPORT
+import { 
+  criarReviewController, 
+  listarReviewsController, 
+  listarMinhasReviewsController 
+} from "../Controllers/reviewsController.js";
 
 const router = Router();
 
-// rotas de reviews
-router.get("/:estabelecimentoId", listarReviewsController);
+// --- ⬇️ ADICIONE A NOVA ROTA AQUI (IMPORTANTE!) ---
+// Esta rota DEVE vir ANTES de '/:estabelecimentoId'
+// para que o roteador não pense que 'me' é um ID.
+router.get("/me", authMiddleware, listarMinhasReviewsController);
 
-// --- ADICIONE ESTA LINHA QUE FALTAVA ---
+
+// --- SUAS ROTAS EXISTENTES ---
+router.get("/:estabelecimentoId", listarReviewsController);
 router.post("/", authMiddleware, criarReviewController);
 
 export default router;

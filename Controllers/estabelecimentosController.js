@@ -7,21 +7,18 @@ import { estabelecimentosService } from '../Services/estabelecimentosService.js'
  * Lista todos os estabelecimentos (para a tela de subcategoria).
  */
 export const listarEstabelecimentos = async (req, res) => {
-    // --- ADICIONADO PARA DEBUG ---
-    console.log(`>>> ${new Date().toISOString()} - ROTA GET /estabelecimentos FOI CHAMADA!`); 
-    // --------------------------
+    // 1. Pega o parâmetro de busca da URL (ex: ?search=barto)
+    const { search } = req.query; 
+
+    console.log(`>>> ${new Date().toISOString()} - ROTA GET /estabelecimentos FOI CHAMADA! (Busca: ${search})`); 
     try {
-        const estabelecimentos = await estabelecimentosService.getEstabelecimentos();
+        // 2. Passa o termo de busca para o service
+        const estabelecimentos = await estabelecimentosService.getEstabelecimentos(search);
         res.json(estabelecimentos);
     } catch (error) {
-        // Loga o erro no backend também
-        console.error(`!!! Erro em listarEstabelecimentos: ${error.message}`);
-        res.status(500).json({ 
-            message: "Erro ao buscar estabelecimentos.", 
-            error: error.message 
-        });
+        // ... (seu 'catch' existente)
     }
-}; //
+};
 
 /**
  * Rota: GET /estabelecimentos/top10/:subcategoriaId

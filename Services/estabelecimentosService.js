@@ -4,13 +4,21 @@ import { pool } from "../db.js";
 
 export const estabelecimentosService = {
   
-  async getEstabelecimentos() {
+  async getEstabelecimentos(searchTerm) { // 1. Adiciona o parâmetro 'searchTerm'
     try {
-      const query = `
-        SELECT * FROM estabelecimentos 
-        ORDER BY media_notas DESC, total_avaliacoes DESC
-      `;
-      const res = await pool.query(query);
+      // 2. Cria a query dinamicamente
+      let query = "SELECT * FROM estabelecimentos";
+      const values = [];
+
+      if (searchTerm) {
+        query += " WHERE nome ILIKE $1"; // ILIKE é case-insensitive
+        values.push(`%${searchTerm}%`); // Procura por qualquer parte do nome
+      }
+
+      // 3. Mantém a ordenação por nota
+      query += " ORDER BY media_notas DESC, total_avaliacoes DESC";
+      
+      const res = await pool.query(query, values);
       return res.rows;
     } catch (error) {
       console.error("Erro ao buscar estabelecimentos:", error);

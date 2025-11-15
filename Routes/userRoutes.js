@@ -1,14 +1,19 @@
-// /Routes/userRoutes.js (CRIE ESTE NOVO ARQUIVO)
-
-import { Router } from "express";
-import { getMyProfileController, updateMyProfileController } from "../Controllers/userController.js";
-import { authMiddleware } from "../Middlewares/authMiddleware.js";
+// /Routes/userRoutes.js (VERSÃO ATUALIZADA)
+import { Router } from 'express';
+import { authMiddleware } from '../Middlewares/authMiddleware.js';
+import { 
+    getMyProfileController, 
+    updateMyProfileController,
+    updateMyPasswordController // <-- 1. IMPORTE O NOVO CONTROLLER
+} from '../Controllers/userController.js';
 
 const router = Router();
 
-router.get("/me", authMiddleware, getMyProfileController);
+// Rotas de perfil (que você já tem)
+router.get('/me', authMiddleware, getMyProfileController);
+router.put('/me', authMiddleware, updateMyProfileController);
 
-
-router.put("/me", authMiddleware, updateMyProfileController);
+// --- 2. ADICIONE A NOVA ROTA DE SENHA ---
+router.put('/me/senha', authMiddleware, updateMyPasswordController);
 
 export default router;

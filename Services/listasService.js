@@ -1,9 +1,7 @@
-// /Services/listasService.js (VERSÃO ATUALIZADA)
 import { pool } from "../db.js";
 
 export const listasService = {
 
-    // --- FUNÇÃO EXISTENTE ---
     async listarListas(usuarioId) {
         const query = `
             SELECT l.id, l.nome, l.publica, 
@@ -18,8 +16,7 @@ export const listasService = {
         return res.rows;
     },
 
-    // --- FUNÇÃO ATUALIZADA ---
-    async listarListasPublicas(usuarioId) { // 1. Aceita o usuarioId
+    async listarListasPublicas(usuarioId) { 
         const query = `
             SELECT l.id, l.nome, l.publica, u.nome as usuario_nome, 
                    COUNT(le.estabelecimento_id) as total_estabelecimentos
@@ -30,11 +27,10 @@ export const listasService = {
             GROUP BY l.id, u.nome
             ORDER BY COUNT(le.estabelecimento_id) DESC, l.nome;
         `;
-        const res = await pool.query(query, [usuarioId]); // 3. Passa o usuarioId para a query
+        const res = await pool.query(query, [usuarioId]); 
         return res.rows;
     },
     
-    // --- FUNÇÃO EXISTENTE ---
     async getDetalhesDaLista(listaId, usuarioId) {
         const listaQuery = `
             SELECT l.*, u.nome as usuario_nome 
@@ -64,7 +60,6 @@ export const listasService = {
         return { ...lista, estabelecimentos: estabRes.rows };
     },
 
-    // --- FUNÇÃO EXISTENTE ---
     async criarLista({ usuarioId, nome, publica, estabelecimentos = [] }) {
         const client = await pool.connect();
         try {
@@ -103,7 +98,6 @@ export const listasService = {
         }
     },
 
-    // --- FUNÇÃO EXISTENTE ---
     async adicionarEstabelecimento(listaId, estabelecimentoId, usuarioId) {
         const client = await pool.connect();
         try {
@@ -126,7 +120,6 @@ export const listasService = {
         }
     },
 
-    // --- FUNÇÃO EXISTENTE ---
     async removerEstabelecimento(listaId, estabelecimentoId, usuarioId) {
         const client = await pool.connect();
         try {
@@ -148,7 +141,6 @@ export const listasService = {
         }
     },
 
-    // --- FUNÇÃO EXISTENTE ---
     async deletarLista(listaId, usuarioId) {
         const client = await pool.connect();
         try {

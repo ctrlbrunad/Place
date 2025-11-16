@@ -1,12 +1,7 @@
-// /Controllers/authController.js
-
 import { authService } from '../Services/authService.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// Esta deve ser sua "Chave Secreta" do JWT. 
-// Coloque-a em um arquivo .env e NUNCA a exponha publicamente.
-// Ex: process.env.JWT_SECRET
 const JWT_SECRET = 'SUA_CHAVE_SECRETA_MUITO_FORTE_AQUI'; 
 
 /**
@@ -36,10 +31,10 @@ export const registerController = async (req, res) => {
         const novoUsuario = await authService.createUser({
             nome,
             email,
-            senha: senhaHash, // <-- CORREÇÃO AQUI
+            senha: senhaHash, 
         }); 
 
-        // 5. Resposta de sucesso
+        
         res.status(201).json({
             message: 'Usuário registrado com sucesso!',
             usuarioId: novoUsuario.id,
@@ -70,19 +65,15 @@ export const loginController = async (req, res) => {
         // 2. Buscar o usuário no banco
         const usuario = await authService.findUserByEmail(email);
         if (!usuario) {
-            // Mensagem genérica para segurança (não dizer se foi email ou senha)
             return res.status(401).json({ message: 'Credenciais inválidas.' });
         }
 
-        // 3. Comparar a senha enviada com o hash salvo no banco
+       
         const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
         if (!senhaCorreta) {
             return res.status(401).json({ message: 'Credenciais inválidas.' });
         }
 
-        // 4. Gerar o Token JWT
-        // O "payload" é a informação que guardamos dentro do token.
-        // O app usará o 'uid' para se identificar em rotas protegidas.
         const payload = {
             uid: usuario.id,
             email: usuario.email,
@@ -91,14 +82,13 @@ export const loginController = async (req, res) => {
         const token = jwt.sign(
             payload, 
             JWT_SECRET, 
-            { expiresIn: '7d' } // Token expira em 7 dias
+            { expiresIn: '7d' } 
         );
 
-        // 5. Enviar o token para o app
         res.status(200).json({
             message: 'Login bem-sucedido!',
             token: token,
-            usuario: { // Envia alguns dados do usuário para o app
+            usuario: { 
                 id: usuario.id,
                 nome: usuario.nome,
                 email: usuario.email

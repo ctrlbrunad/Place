@@ -1,10 +1,8 @@
-// /Services/estabelecimentosAdminService.js
-
-import { pool } from "../db.js"; // Importa o pool do Neon DB
+import { pool } from "../db.js"; 
 
 export const createEstabelecimento = async (estabelecimentoData) => {
     try {
-        // Pega os dados do JS (camelCase)
+
         const { nome, endereco, subcategoriaId, rating = 0, total_avaliacoes = 0 } = estabelecimentoData;
         
         const query = `
@@ -12,7 +10,6 @@ export const createEstabelecimento = async (estabelecimentoData) => {
             VALUES ($1, $2, $3, $4, $5) 
             RETURNING * `;
         
-        // Passa os valores para o SQL 
         const res = await pool.query(query, [nome, endereco, subcategoriaId, rating, total_avaliacoes]);
         
         return res.rows[0];
@@ -53,7 +50,7 @@ export const deleteEstabelecimento = async (id) => {
         if (res.rowCount === 0) {
             throw new Error('Estabelecimento não encontrado para exclusão.');
         }
-        // Sucesso, não retorna nada (o controller espera um 204)
+
     } catch (error) {
         console.error("Erro ao deletar estabelecimento:", error);
         throw new Error("Não foi possível deletar o estabelecimento.");

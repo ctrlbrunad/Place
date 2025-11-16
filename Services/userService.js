@@ -1,10 +1,8 @@
-// /Services/userService.js (VERSÃO ATUALIZADA)
 import { pool } from "../db.js";
-import bcrypt from 'bcryptjs'; // <-- 1. IMPORTE O 'bcryptjs'
+import bcrypt from 'bcryptjs';
 
 export const userService = {
 
-    // ... (sua função 'getUserProfile' existente)
     async getUserProfile(usuarioId) {
         try {
             const query = `
@@ -38,10 +36,9 @@ export const userService = {
         }
     },
 
-    // ... (sua função 'updateUserProfile' existente)
     async updateUserProfile(usuarioId, { nome, avatar_id }) { // 1. Adiciona avatar_id
         try {
-            // 2. Constrói a query dinamicamente
+            
             let query = 'UPDATE users SET';
             const values = [];
             let fieldIndex = 1;
@@ -69,10 +66,10 @@ export const userService = {
             throw new Error("Não foi possível atualizar o perfil.");
         }
     },
-    // --- 2. ADICIONE A NOVA FUNÇÃO DE ATUALIZAR SENHA ---
+    
     async updatePassword(usuarioId, novaSenha) {
         try {
-            // Criptografa a nova senha
+
             const salt = await bcrypt.genSalt(10);
             const senhaHash = await bcrypt.hash(novaSenha, salt);
 

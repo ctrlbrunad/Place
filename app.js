@@ -1,7 +1,5 @@
 import express from "express";
 import cors from "cors";
-
-// --- Imports de Rotas (Todos juntos no topo) ---
 import estabelecimentosRoutes from "./Routes/estabelecimentosRoutes.js";
 import listasRoutes from "./Routes/listasRoutes.js";
 import reviewsRoutes from "./Routes/reviewsRoutes.js";
@@ -10,7 +8,7 @@ import sugestoesAdminRoutes from "./Routes/sugestoesAdminRoutes.js";
 import authRoutes from "./Routes/authRoutes.js";
 import userRoutes from "./Routes/userRoutes.js";
 import estabelecimentosAdminRoutes from "./Routes/estabelecimentosAdminRoutes.js";
-import favoritosRoutes from "./Routes/favoritosRoutes.js"; // <-- 1. ADICIONADO
+import favoritosRoutes from "./Routes/favoritosRoutes.js"; 
 
 // IMPORTA O SWAGGER
 import { setupSwagger } from "./swagger.js";
@@ -19,7 +17,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // middlewares
-// (Removi um 'npm install uuid' perdido que estava aqui)
 app.use(cors());
 app.use(express.json());
 
@@ -35,7 +32,7 @@ app.use("/reviews", reviewsRoutes);
 app.use("/sugestoes", sugestoesRoutes);
 app.use("/admin/estabelecimentos", estabelecimentosAdminRoutes);
 app.use("/admin/sugestoes", sugestoesAdminRoutes);
-app.use("/favoritos", favoritosRoutes); // <-- 2. ADICIONADO
+app.use("/favoritos", favoritosRoutes); 
 
 
 app.get("/", (req, res) => {

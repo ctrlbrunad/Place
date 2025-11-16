@@ -1,13 +1,8 @@
-// /Services/authService.js (VERSÃO COMPLETA E CORRIGIDA)
-
 import { pool } from "../db.js";
-import { v4 as uuidv4 } from 'uuid'; // Importa o gerador de ID
+import { v4 as uuidv4 } from 'uuid'; 
 
 export const authService = {
-    /**
-     * Encontra um usuário pelo email.
-     * Essencial para o login e para verificar duplicados no registro.
-     */
+    
     async findUserByEmail(email) {
         try {
             const result = await pool.query(
@@ -15,7 +10,6 @@ export const authService = {
                 [email]
             );
             
-            // Retorna o primeiro usuário encontrado (ou undefined)
             return result.rows[0]; 
 
         } catch (error) {
@@ -25,8 +19,8 @@ export const authService = {
     },
 
     /**
-     * Cria um novo usuário no banco de dados.
-     * Recebe os dados já validados do controller.
+     * cria um novo usuário no banco de dados.
+     * recebe os dados já validados do controller
      */
     async createUser({ nome, email, senha }) {
         try {

@@ -1,11 +1,7 @@
-// /Services/reviewsService.js (VERSÃO ATUALIZADA)
-
 import { pool } from '../db.js';
-// (O resto dos seus imports, se houver)
 
-// --- SUA FUNÇÃO EXISTENTE ---
 export async function criarReview(usuarioId, estabelecimentoId, nota, comentario) {
-  // ... (seu código existente para criar review)
+  
   const client = await pool.connect();
   try {
     await client.query('BEGIN'); 
@@ -48,9 +44,8 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
   }
 }
 
-// --- SUA FUNÇÃO EXISTENTE ---
+
 export async function listarReviews(estabelecimentoId) {
-  // ... (seu código existente para listar reviews)
   const query = `
     SELECT r.id, r.usuario_id, u.nome AS usuario_nome, r.nota, r.comentario, r.data
     FROM reviews r
@@ -62,11 +57,6 @@ export async function listarReviews(estabelecimentoId) {
   return res.rows;
 }
 
-// --- ⬇️ ADICIONE ESTA NOVA FUNÇÃO NO FINAL ---
-/**
- * Busca todas as reviews de um usuário específico (para "Minhas Avaliações").
- * Junta com a tabela 'estabelecimentos' para pegar o nome.
- */
 export async function listarReviewsDoUsuario(usuarioId) {
   try {
     const query = `

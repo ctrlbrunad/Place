@@ -1,7 +1,5 @@
-// /Controllers/listasController.js (VERSÃO ATUALIZADA)
 import { listasService } from "../Services/listasService.js";
 
-// --- FUNÇÃO EXISTENTE ---
 export const listarListasController = async (req, res) => {
     try {
         const listas = await listasService.listarListas(req.user.uid);
@@ -11,7 +9,6 @@ export const listarListasController = async (req, res) => {
     }
 }; 
 
-// --- FUNÇÃO EXISTENTE ---
 export const criarListaController = async (req, res) => {
     try {
         const { nome, publica, estabelecimentos } = req.body;
@@ -27,7 +24,6 @@ export const criarListaController = async (req, res) => {
     }
 }; 
 
-// --- FUNÇÃO EXISTENTE ---
 export const adicionarEstabelecimentoController = async (req, res) => {
     try {
         const { listaId } = req.params;
@@ -46,7 +42,6 @@ export const adicionarEstabelecimentoController = async (req, res) => {
     }
 }; 
 
-// --- FUNÇÃO EXISTENTE ---
 export const removerEstabelecimentoController = async (req, res) => {
     try {
         const { listaId, estabelecimentoId } = req.params;
@@ -64,7 +59,6 @@ export const removerEstabelecimentoController = async (req, res) => {
     }
 }; 
 
-// --- FUNÇÃO EXISTENTE ---
 export const deletarListaController = async (req, res) => {
     try {
         const { listaId } = req.params;
@@ -78,7 +72,6 @@ export const deletarListaController = async (req, res) => {
     }
 }; 
 
-// --- FUNÇÃO EXISTENTE ---
 export const getDetalhesDaListaController = async (req, res) => {
     try {
         const { listaId } = req.params;
@@ -101,13 +94,11 @@ export const getDetalhesDaListaController = async (req, res) => {
     }
 };
 
-// --- FUNÇÃO ATUALIZADA ---
 export const listarListasPublicasController = async (req, res) => {
     try {
-        // 1. Pega o ID do usuário logado (do token/authMiddleware)
+
         const usuarioId = req.user.uid;
 
-        // 2. Passa o ID para o service
         const listas = await listasService.listarListasPublicas(usuarioId);
         res.status(200).json(listas);
     } catch (error) {

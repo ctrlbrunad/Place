@@ -1,4 +1,3 @@
-// /swagger.js (VERSÃO FINAL)
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -11,8 +10,7 @@ const options = {
       description: "API para gerenciar listas, reviews e estabelecimentos",
     },
 
-    // --- DEFINIÇÃO DAS TAGS ---
-    // Centraliza as "categorias" da sua API
+ 
     tags: [
       {
         name: "Auth",
@@ -26,11 +24,8 @@ const options = {
         name: "Reviews",
         description: "Endpoints para criar e listar avaliações"
       }
-      // Adicione outras tags aqui (ex: "Estabelecimentos", "Usuários")
     ],
     
-    // --- COMPONENTS SECTION ---
-    // Contém a definição de segurança E todos os schemas
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -40,7 +35,7 @@ const options = {
         },
       },
       schemas: {
-        // Schemas do Auth
+        
         NovoUsuario: {
           type: "object",
           required: ["nome", "email", "senha"],
@@ -85,8 +80,8 @@ const options = {
             estabelecimentos: { type: "array", items: { type: "string" } },
           },
         },
-      }, // Fim de schemas
-    }, // Fim de components
+      }, 
+    }, 
     
     security: [
       {
@@ -95,8 +90,6 @@ const options = {
     ],
   },
   
-  // Voltamos ao padrão "glob" que é mais simples
-  // Agora vai funcionar pois não há mais conflitos
   apis: ["./Routes/*.js"],
 };
 

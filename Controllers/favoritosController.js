@@ -26,12 +26,11 @@ export const getMeusFavoritosController = async (req, res) => {
   }
 };
 
-// Controller para a otimização
 export const getMeusIdsFavoritosController = async (req, res) => {
    try {
     const usuarioId = req.user.uid;
     const ids = await favoritosService.listarIdsFavoritos(usuarioId);
-    res.status(200).json(Array.from(ids)); // Converte o Set em Array
+    res.status(200).json(Array.from(ids)); 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

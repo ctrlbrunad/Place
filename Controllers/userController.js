@@ -1,8 +1,6 @@
-// /Controllers/userController.js (VERSÃO ATUALIZADA)
 import { userService } from '../Services/userService.js';
-import bcrypt from 'bcryptjs'; // <-- 1. IMPORTE O 'bcryptjs'
+import bcrypt from 'bcryptjs'; 
 
-// ... (sua função 'getMyProfileController' existente)
 export const getMyProfileController = async (req, res) => {
     try {
         const usuarioId = req.user.uid;
@@ -23,13 +21,12 @@ export const getMyProfileController = async (req, res) => {
     }
 };
 
-// ... (sua função 'updateMyProfileController' existente)
 export const updateMyProfileController = async (req, res) => {
     try {
         const usuarioId = req.user.uid;
-        const { nome, avatar_id } = req.body; // 1. Pega o avatar_id do body
+        const { nome, avatar_id } = req.body; 
 
-        if (!nome && !avatar_id) { // 2. Verifica se pelo menos um foi enviado
+        if (!nome && !avatar_id) { 
             return res.status(400).json({ message: 'Nenhum dado para atualizar.' });
         }
 
@@ -40,11 +37,11 @@ export const updateMyProfileController = async (req, res) => {
             usuario: perfilAtualizado,
         });
     } catch (error) {
-        // ... (seu 'catch'
+
     }
 };
 
-// --- 2. ADICIONE O NOVO CONTROLLER DE SENHA ---
+
 export const updateMyPasswordController = async (req, res) => {
     try {
         const usuarioId = req.user.uid;

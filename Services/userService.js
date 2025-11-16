@@ -39,15 +39,27 @@ export const userService = {
     },
 
     // ... (sua função 'updateUserProfile' existente)
-    async updateUserProfile(usuarioId, { nome }) {
+    async updateUserProfile(usuarioId, { nome, avatar_id }) { // 1. Adiciona avatar_id
         try {
-            const result = await pool.query(
-                `UPDATE users 
-                 SET nome = $1 
-                 WHERE id = $2
-                 RETURNING id, nome, email`,
-                [nome, usuarioId]
-            );
+            // 2. Constrói a query dinamicamente
+            let query = 'UPDATE users SET';
+            const values = [];
+            let fieldIndex = 1;
+
+            if (nome) {
+                query += ` nome = $${fieldIndex++}`;
+                values.push(nome);
+            }
+            if (avatar_id) {
+                query += `${nome ? ',' : ''} avatar_id = $${fieldIndex++}`;
+                values.push(avatar_id);
+            }
+
+            query += ` WHERE id = $${fieldIndex++} RETURNING id, nome, email, avatar_id`; // 3. Retorna o avatar_id
+            values.push(usuarioId);
+
+            const result = await pool.query(query, values);
+
             if (result.rowCount === 0) {
                 throw new Error("Usuário não encontrado para atualização.");
             }
@@ -57,7 +69,6 @@ export const userService = {
             throw new Error("Não foi possível atualizar o perfil.");
         }
     },
-
     // --- 2. ADICIONE A NOVA FUNÇÃO DE ATUALIZAR SENHA ---
     async updatePassword(usuarioId, novaSenha) {
         try {

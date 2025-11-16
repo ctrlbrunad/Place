@@ -27,21 +27,20 @@ export const getMyProfileController = async (req, res) => {
 export const updateMyProfileController = async (req, res) => {
     try {
         const usuarioId = req.user.uid;
-        const { nome } = req.body; 
-        if (!nome) {
-            return res.status(400).json({ message: 'O campo "nome" é obrigatório.' });
+        const { nome, avatar_id } = req.body; // 1. Pega o avatar_id do body
+
+        if (!nome && !avatar_id) { // 2. Verifica se pelo menos um foi enviado
+            return res.status(400).json({ message: 'Nenhum dado para atualizar.' });
         }
-        const perfilAtualizado = await userService.updateUserProfile(usuarioId, { nome });
+
+        const perfilAtualizado = await userService.updateUserProfile(usuarioId, { nome, avatar_id }); // 3. Passa para o service
+
         res.status(200).json({
             message: 'Perfil atualizado com sucesso!',
             usuario: perfilAtualizado,
         });
     } catch (error) {
-        console.error('Erro no updateMyProfileController:', error);
-        res.status(500).json({ 
-            message: 'Erro ao atualizar perfil.', 
-            error: error.message 
-        });
+        // ... (seu 'catch'
     }
 };
 

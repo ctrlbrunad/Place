@@ -23,7 +23,21 @@ export const criarListaController = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }; 
+export const toggleFavoritoListaController = async (req, res) => {
+    try {
+        const { listaId } = req.params;
+        const { uid } = req.user;
 
+        const resultado = await listasService.toggleFavoritoLista(listaId, uid);
+
+        res.status(200).json({ 
+            message: resultado.favoritada ? "Lista adicionada aos favoritos." : "Lista removida dos favoritos.",
+            favoritada: resultado.favoritada 
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 export const adicionarEstabelecimentoController = async (req, res) => {
     try {
         const { listaId } = req.params;

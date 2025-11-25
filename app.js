@@ -9,6 +9,7 @@ import authRoutes from "./Routes/authRoutes.js";
 import userRoutes from "./Routes/userRoutes.js";
 import estabelecimentosAdminRoutes from "./Routes/estabelecimentosAdminRoutes.js";
 import favoritosRoutes from "./Routes/favoritosRoutes.js"; 
+import visitadosRoutes from "./Routes/visitadosRoutes.js";
 
 // IMPORTA O SWAGGER
 import { setupSwagger } from "./swagger.js";
@@ -33,6 +34,7 @@ app.use("/sugestoes", sugestoesRoutes);
 app.use("/admin/estabelecimentos", estabelecimentosAdminRoutes);
 app.use("/admin/sugestoes", sugestoesAdminRoutes);
 app.use("/favoritos", favoritosRoutes); 
+app.use("/visitados", visitadosRoutes);
 
 
 app.get("/", (req, res) => {

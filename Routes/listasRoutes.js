@@ -5,10 +5,12 @@ import {
     deletarListaController, 
     adicionarEstabelecimentoController, 
     removerEstabelecimentoController,
+    toggleFavoritoListaController,
     getDetalhesDaListaController,
     listarListasPublicasController
 } from "../Controllers/listasController.js";
 import { authMiddleware } from "../Middlewares/authMiddleware.js"; 
+
 
 const router = Router();
 
@@ -19,5 +21,5 @@ router.get("/:listaId", authMiddleware, getDetalhesDaListaController);
 router.delete("/:listaId", authMiddleware, deletarListaController);
 router.post("/:listaId/estabelecimentos", authMiddleware, adicionarEstabelecimentoController);
 router.delete("/:listaId/estabelecimentos/:estabelecimentoId", authMiddleware, removerEstabelecimentoController);
-
+router.post("/:listaId/favoritar", authMiddleware, toggleFavoritoListaController);
 export default router;

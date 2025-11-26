@@ -1,9 +1,9 @@
-// /Services/listasService.js (COM FAVORITOS)
+// /Services/listasService.js
 import { pool } from "../db.js";
 
 export const listasService = {
 
-    // Minhas Listas (Igual)
+    // ... (listarListas - IGUAL)
     async listarListas(usuarioId) {
         const query = `
             SELECT l.id, l.nome, l.descricao, l.publica, 
@@ -18,29 +18,44 @@ export const listasService = {
         return res.rows;
     },
 
-    // Listas Públicas (ATUALIZADO: Ordenação por Favorito)
+    // --- NOVA FUNÇÃO: LISTAR FAVORITAS ---
+    async listarListasFavoritas(usuarioId) {
+        const query = `
+            SELECT 
+                l.id, l.nome, l.descricao, l.publica, u.nome as usuario_nome,
+                COUNT(DISTINCT le.estabelecimento_id) as total_estabelecimentos
+            FROM listas l
+            JOIN lista_favoritos lf ON l.id = lf.lista_id
+            JOIN users u ON l.usuario_id = u.id
+            LEFT JOIN lista_estabelecimentos le ON l.id = le.lista_id
+            WHERE lf.usuario_id = $1
+            GROUP BY l.id, u.nome
+            ORDER BY l.nome;
+        `;
+        const res = await pool.query(query, [usuarioId]);
+        return res.rows;
+    },
+    // -------------------------------------
+
+    // ... (listarListasPublicas, getDetalhesDaLista, toggleFavoritoLista, etc. - MANTENHA IGUAL)
     async listarListasPublicas(usuarioId) { 
         const query = `
             SELECT 
                 l.id, l.nome, l.descricao, l.publica, u.nome as usuario_nome, 
                 COUNT(DISTINCT le.estabelecimento_id) as total_estabelecimentos,
-                -- Verifica se o usuário logado favoritou esta lista
                 (CASE WHEN lf.lista_id IS NOT NULL THEN true ELSE false END) as favoritada
             FROM listas l
             JOIN users u ON l.usuario_id = u.id
             LEFT JOIN lista_estabelecimentos le ON l.id = le.lista_id
-            -- Junta com a tabela de favoritos filtrando pelo usuário atual
             LEFT JOIN lista_favoritos lf ON l.id = lf.lista_id AND lf.usuario_id = $1
             WHERE l.publica = true AND l.usuario_id != $1
             GROUP BY l.id, u.nome, lf.lista_id
-            -- ORDENAÇÃO: Favoritadas aparecem primeiro!
             ORDER BY favoritada DESC, COUNT(le.estabelecimento_id) DESC, l.nome;
         `;
         const res = await pool.query(query, [usuarioId]); 
         return res.rows;
     },
     
-    // Detalhes (ATUALIZADO: Retorna se é favorito)
     async getDetalhesDaLista(listaId, usuarioId) {
         const listaQuery = `
             SELECT 
@@ -73,22 +88,18 @@ export const listasService = {
         return { ...lista, estabelecimentos: estabRes.rows };
     },
 
-    // --- NOVA FUNÇÃO: Favoritar/Desfavoritar ---
     async toggleFavoritoLista(listaId, usuarioId) {
         const client = await pool.connect();
         try {
-            // 1. Verifica se a lista existe e é pública (ou se o usuário é dono, embora raro favoritar a própria)
             const checkQuery = "SELECT publica, usuario_id FROM listas WHERE id = $1";
             const checkRes = await client.query(checkQuery, [listaId]);
             if (checkRes.rowCount === 0) throw new Error("Lista não encontrada.");
             
-            // 2. Tenta deletar (se já favoritou)
             const deleteRes = await client.query(
                 "DELETE FROM lista_favoritos WHERE lista_id = $1 AND usuario_id = $2",
                 [listaId, usuarioId]
             );
 
-            // 3. Se não deletou nada, insere
             if (deleteRes.rowCount === 0) {
                 await client.query(
                     "INSERT INTO lista_favoritos (lista_id, usuario_id) VALUES ($1, $2)",
@@ -106,7 +117,6 @@ export const listasService = {
         }
     },
 
-    // --- FUNÇÕES DE CRIAÇÃO/EDIÇÃO (IGUAIS) ---
     async criarLista({ usuarioId, nome, descricao, publica, estabelecimentos = [] }) {
         const client = await pool.connect();
         try {
@@ -153,7 +163,7 @@ export const listasService = {
             await client.query('BEGIN');
             const checkRes = await client.query("SELECT usuario_id FROM listas WHERE id = $1", [listaId]);
             if (checkRes.rowCount === 0 || checkRes.rows[0].usuario_id !== usuarioId) throw new Error("Não autorizado.");
-            await client.query("DELETE FROM lista_favoritos WHERE lista_id = $1", [listaId]); // Limpa favoritos antes
+            await client.query("DELETE FROM lista_favoritos WHERE lista_id = $1", [listaId]); 
             await client.query("DELETE FROM lista_estabelecimentos WHERE lista_id = $1", [listaId]);
             await client.query("DELETE FROM listas WHERE id = $1", [listaId]);
             await client.query('COMMIT');

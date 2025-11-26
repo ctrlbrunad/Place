@@ -9,12 +9,25 @@ export const listarListasController = async (req, res) => {
     }
 }; 
 
+// --- ESTA É A FUNÇÃO QUE ESTAVA FALTANDO ---
+export const listarListasFavoritasController = async (req, res) => {
+    try {
+        const listas = await listasService.listarListasFavoritas(req.user.uid);
+        res.json(listas);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// -------------------------------------------
+
 export const criarListaController = async (req, res) => {
     try {
-        const { nome, publica, estabelecimentos } = req.body;
+        const { nome, descricao, publica, estabelecimentos } = req.body;
+        
         const lista = await listasService.criarLista({ 
             usuarioId: req.user.uid, 
             nome, 
+            descricao, 
             publica, 
             estabelecimentos 
         });
@@ -23,6 +36,7 @@ export const criarListaController = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 }; 
+
 export const toggleFavoritoListaController = async (req, res) => {
     try {
         const { listaId } = req.params;
@@ -38,6 +52,7 @@ export const toggleFavoritoListaController = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
 export const adicionarEstabelecimentoController = async (req, res) => {
     try {
         const { listaId } = req.params;
@@ -110,9 +125,7 @@ export const getDetalhesDaListaController = async (req, res) => {
 
 export const listarListasPublicasController = async (req, res) => {
     try {
-
         const usuarioId = req.user.uid;
-
         const listas = await listasService.listarListasPublicas(usuarioId);
         res.status(200).json(listas);
     } catch (error) {

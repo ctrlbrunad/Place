@@ -37,7 +37,11 @@ export const updateMyProfileController = async (req, res) => {
             usuario: perfilAtualizado,
         });
     } catch (error) {
-
+        console.error('Erro no updateMyProfileController:', error);
+        res.status(500).json({ 
+            message: 'Erro ao atualizar o perfil.', 
+            error: error.message 
+        });
     }
 };
 

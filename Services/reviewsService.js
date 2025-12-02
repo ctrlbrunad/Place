@@ -1,10 +1,36 @@
-// /Services/reviewsService.js
+// /Services/reviewsService.js (VERSÃO FINAL E SEGURA)
+
 import { pool } from '../db.js';
 
+// --- FUNÇÃO AUXILIAR: RECALCULAR MÉDIA ---
+async function atualizarMediaEstabelecimento(client, estabelecimentoId) {
+    // Calcula a nova média (AVG) e o novo total (COUNT)
+    const statsQuery = `
+      SELECT 
+        AVG(nota)::numeric(10,2) as media_notas, 
+        COUNT(*) as total_avaliacoes 
+      FROM reviews 
+      WHERE estabelecimento_id = $1
+    `;
+    const statsRes = await client.query(statsQuery, [estabelecimentoId]);
+    
+    const media_notas = statsRes.rows[0]?.media_notas || 0;
+    const total_avaliacoes = statsRes.rows[0]?.total_avaliacoes || 0;
+
+    // Atualiza a tabela 'estabelecimentos'
+    const updateQuery = `
+      UPDATE estabelecimentos 
+      SET media_notas = $1, total_avaliacoes = $2 
+      WHERE id = $3
+    `;
+    await client.query(updateQuery, [parseFloat(media_notas), parseInt(total_avaliacoes, 10), estabelecimentoId]);
+}
+// ------------------------------------------
+
+// --- FUNÇÃO DE CRIAÇÃO (COM VERIFICAÇÃO DE DUPLICIDADE) ---
 export async function criarReview(usuarioId, estabelecimentoId, nota, comentario) {
   const client = await pool.connect();
   try {
-    // 1. VERIFICAÇÃO DE DUPLICIDADE (REGRA NOVA)
     const checkQuery = "SELECT id FROM reviews WHERE usuario_id = $1 AND estabelecimento_id = $2";
     const checkRes = await client.query(checkQuery, [usuarioId, estabelecimentoId]);
     
@@ -22,38 +48,70 @@ export async function criarReview(usuarioId, estabelecimentoId, nota, comentario
     const res = await client.query(query, [usuarioId, estabelecimentoId, nota, comentario]);
     const reviewId = res.rows[0].id;
 
-    // Recalcula média
     await atualizarMediaEstabelecimento(client, estabelecimentoId);
 
     await client.query('COMMIT'); 
     return reviewId;
   } catch (error) {
     await client.query('ROLLBACK'); 
-    console.error("Erro ao criar review:", error);
-    throw error; // Repassa o erro (inclusive o de duplicidade)
+    throw error;
   } finally {
     client.release(); 
   }
 }
 
-export async function listarReviews(estabelecimentoId) {
-  const query = `
-    SELECT r.id, r.usuario_id, u.nome AS usuario_nome, r.nota, r.comentario, r.data
-    FROM reviews r
-    JOIN users u ON r.usuario_id = u.id
-    WHERE r.estabelecimento_id = $1
-    ORDER BY r.data DESC
-  `;
-  const res = await pool.query(query, [estabelecimentoId]);
-  return res.rows;
+// --- FUNÇÃO DE DELETAR (CORRIGIDA) ---
+export async function deletarReview(reviewId, usuarioId) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        const reviewIdInt = parseInt(reviewId, 10); 
+        
+        // 1. VERIFICA AUTORIZAÇÃO E PEGA O ID DO ESTABELECIMENTO
+        const getReviewQuery = `
+          SELECT estabelecimento_id 
+          FROM reviews 
+          WHERE id = $1 AND usuario_id = $2
+        `;
+        const reviewRes = await client.query(getReviewQuery, [reviewIdInt, usuarioId]); 
+
+        if (reviewRes.rowCount === 0) {
+            throw new Error("Avaliação não encontrada ou você não tem permissão para excluí-la.");
+        }
+        const estabelecimentoId = reviewRes.rows[0].estabelecimento_id;
+
+        // 2. DELETA SOMENTE A REVIEW COM O ID FORNECIDO
+        await client.query("DELETE FROM reviews WHERE id = $1", [reviewIdInt]);
+
+        // 3. RECALCULA MÉDIA
+        await atualizarMediaEstabelecimento(client, estabelecimentoId);
+
+        await client.query('COMMIT');
+    } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+    } finally {
+        client.release(); 
+    }
 }
 
+// --- FUNÇÃO CORRIGIDA (O ERRO ESTAVA AQUI!) ---
 export async function listarReviewsDoUsuario(usuarioId) {
   try {
     const query = `
-      SELECT r.id, r.nota, r.comentario, r.data, e.nome AS estabelecimento_nome, e.id AS estabelecimento_id
+      SELECT 
+        r.id, 
+        r.usuario_id, 
+        u.nome AS usuario_nome, -- Nome do usuário
+        r.nota, 
+        r.comentario, 
+        r.data, 
+        e.nome AS estabelecimento_nome, 
+        e.id AS estabelecimento_id
       FROM reviews r
       JOIN estabelecimentos e ON r.estabelecimento_id = e.id
+      JOIN users u ON r.usuario_id = u.id -- <--- CORREÇÃO: Junta com a tabela de usuários
       WHERE r.usuario_id = $1
       ORDER BY r.data DESC;
     `;
@@ -65,49 +123,15 @@ export async function listarReviewsDoUsuario(usuarioId) {
   }
 }
 
-// --- 2. NOVA FUNÇÃO DE DELETAR ---
-export async function deletarReview(reviewId, usuarioId) {
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-
-        // Pega o estabelecimento_id antes de deletar (para recalcular a média depois)
-        const getReviewQuery = "SELECT estabelecimento_id FROM reviews WHERE id = $1 AND usuario_id = $2";
-        const reviewRes = await client.query(getReviewQuery, [reviewId, usuarioId]);
-
-        if (reviewRes.rowCount === 0) {
-            throw new Error("Avaliação não encontrada ou você não tem permissão.");
-        }
-        const estabelecimentoId = reviewRes.rows[0].estabelecimento_id;
-
-        // Deleta
-        await client.query("DELETE FROM reviews WHERE id = $1", [reviewId]);
-
-        // Recalcula média
-        await atualizarMediaEstabelecimento(client, estabelecimentoId);
-
-        await client.query('COMMIT');
-    } catch (error) {
-        await client.query('ROLLBACK');
-        throw error;
-    } finally {
-        client.release();
-    }
-}
-
-// Função auxiliar para recalcular média (usada no criar e no deletar)
-async function atualizarMediaEstabelecimento(client, estabelecimentoId) {
-    const statsQuery = `
-      SELECT AVG(nota)::numeric(10,2) as media_notas, COUNT(*) as total_avaliacoes 
-      FROM reviews WHERE estabelecimento_id = $1
-    `;
-    const statsRes = await client.query(statsQuery, [estabelecimentoId]);
-    // Se não tiver mais reviews, volta para 0
-    const media_notas = statsRes.rows[0]?.media_notas || 0;
-    const total_avaliacoes = statsRes.rows[0]?.total_avaliacoes || 0;
-
-    const updateQuery = `
-      UPDATE estabelecimentos SET media_notas = $1, total_avaliacoes = $2 WHERE id = $3
-    `;
-    await client.query(updateQuery, [parseFloat(media_notas), parseInt(total_avaliacoes, 10), estabelecimentoId]);
+// --- FUNÇÃO EXISTENTE ---
+export async function listarReviews(estabelecimentoId) {
+  const query = `
+    SELECT r.id, r.usuario_id, u.nome AS usuario_nome, r.nota, r.comentario, r.data
+    FROM reviews r
+    JOIN users u ON r.usuario_id = u.id
+    WHERE r.estabelecimento_id = $1
+    ORDER BY r.data DESC
+  `;
+  const res = await pool.query(query, [estabelecimentoId]);
+  return res.rows;
 }

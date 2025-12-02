@@ -10,6 +10,7 @@ export const userService = {
                     u.id, 
                     u.nome, 
                     u.email, 
+                    u.avatar_id,
                     (
                         SELECT COUNT(*) 
                         FROM reviews r 
